@@ -1,7 +1,7 @@
 #pragma once
 
 #include "net_common.h"
-#include "NetMessaage.h"
+#include "NetMessage.h"
 
 class EndToEnd
 {
