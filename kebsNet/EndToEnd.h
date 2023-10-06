@@ -11,21 +11,36 @@ private:
 	asio::error_code m_client_ec;
 	asio::io_context m_client_context;
 	
-	asio::io_context m_server_context;
+	
 	asio::ip::tcp::acceptor m_server_acceptor;
 
 	asio::ip::tcp::socket m_socket;
 	asio::ip::tcp::endpoint m_endpoint;
 
+	asio::ip::tcp::socket m_server_scoket;
+	bool m_connection = false;
+
 	//passing a message pointer for every message sent
 	NetMessage * m_message;
 
+	//ok some things that need to be cleared up
+	
+	// -- Error messages are a mess i should create a single istance
+	//or separate each message per function
+
+	//--another issue reguards async handling and the fact that im
+	//using just one io_context
+	//should also find a whay to organize thread
+
 public:
-	EndToEnd(uint16_t port)
-		: m_server_acceptor(m_server_context),
+
+	EndToEnd(uint16_t port = 200)
+		: m_server_acceptor(m_client_context),
 		m_endpoint(asio::ip::tcp::v4(), port),
 		m_message{ nullptr },
-		m_socket(m_client_context)
+		m_socket(m_client_context),
+		m_server_scoket(m_client_context)
+		
 		
 		
 	{
@@ -34,25 +49,57 @@ public:
 	//make this func async until a connection is established
 	void wait_for_connection() 
 	{
-	
-	}
+		//bind the acceptor
+
+		m_server_acceptor.open(m_endpoint.protocol());
+		m_server_acceptor.bind(m_endpoint);
+		m_server_acceptor.listen();
+		
+		m_server_acceptor.async_accept(m_server_scoket,
+			[this](const asio::error_code& ec) {
+				
+				
+				if (!ec)
+				{
+					std::cout << "connection accepted" << std::endl;
+					//wait_for_connection();
+				}
+
+				else
+				{
+					std::cout << "ERROR Accept: " << ec.message() << std::endl;
+					//wait_for_connection();
+				}
+				
+			});
+		
+	} 
 
 	void make_connection(std::string ip, uint16_t port)
 	{
 		asio::ip::tcp::endpoint  endpoint(asio::ip::make_address(ip, m_client_ec), port);
+		std::cout << "ERROR creating endpoint: " << m_client_ec.message() << std::endl;
 		
-		m_socket.connect(endpoint, m_client_ec);
-		if (!m_client_ec) {
-			std::cout << "connected" << std::endl;
-		}
-		else
-		{
-			std::cout << "failed to connect to address " << m_client_ec.message();
-		}
+		m_socket.async_connect(endpoint, [this](asio::error_code ec)
+			{
+				if (!ec) {
+					std::cout << "connected" << std::endl;
 
-		if (m_socket.is_open()) {
-			on_connection();
-		}
+				}
+
+				else
+				{
+					std::cout << "failed to connect to address " << m_client_ec.message();
+				}
+
+				if (m_socket.is_open()) {
+					on_connection();
+				}
+			});
+
+	}
+	void close_connection() 
+	{
 
 	}
 	//all of this part must be async with read and write
@@ -66,13 +113,13 @@ public:
 
 	}
 
-	void send_message( NetMessage* message)
+	void send_message( NetMessage& message)
 	{
-
-			std::vector<uint8_t> msg = message->get_message();
+		if (m_connection){
+			std::string msg = message.get_message();
 			asio::error_code ec;
 			m_socket.write_some(asio::buffer(msg.data(), msg.size()), ec);
-			
+
 					if (!ec)
 					{
 						std::cout << "message delivered" << std::endl;
@@ -81,8 +128,12 @@ public:
 					else if (ec) {
 						std::cout << "error sending message " << ec.message() << std::endl;
 
-					
 				}
+		}
+		else
+		{
+			std::cout << "Error cannot send message if client is not connected" << std::endl;
+		}
 		
 
 	}
@@ -116,6 +167,9 @@ public:
 				});
 		}
 
+	}
+	void run_context() {
+		m_client_context.run();
 	}
 
 };
