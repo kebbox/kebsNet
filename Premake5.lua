@@ -1,5 +1,7 @@
 workspace "kebsNet"
 	configurations {"Debug", "Release"}
+workspace "kebsNet"
+	configurations {"Debug", "Release"}
 
 project "kebsNet"
 	kind "ConsoleApp"
