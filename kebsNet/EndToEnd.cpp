@@ -41,26 +41,19 @@ void EndToEnd::stop_waiting()
 
 void EndToEnd::make_connection(const std::string ip, uint16_t port)
 {
-	
-	
-
 	asio::ip::tcp::endpoint  endpoint(asio::ip::make_address(ip), port);
 
 	m_socket.async_connect(endpoint, [this](asio::error_code ec)
 		{
 			if (!ec) {
 				std::cout << std::endl << "connected" << std::endl;
-
 			}
 
 			else
 			{
 				std::cout << std::endl << ec.message()<< std::endl;
 			}
-
-			if (m_socket.is_open()) {
-				std::cout << std::endl << "connected!"<<std::endl;
-			}
+	
 		});
 	run_context();
 

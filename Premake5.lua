@@ -10,6 +10,10 @@ project "kebsNet"
 	includedirs{"$(SolutionDir)"}
 
 	files {"**.h", "**.cpp",}
+	files{
+		"../asio1.28.0/include/*.cpp",
+		"../asio1.28.0/include/*.hpp",
+	}
 
 
 	filter "configurations:Debug"
