@@ -3,9 +3,7 @@
 #define _WIN32_WINNT 0x0A00
 #endif
 
-#include "net_common.h"
-#include "NetMessage.h"
-#include "EndToEnd.h"
+
 #include "Core.h"
 
 
