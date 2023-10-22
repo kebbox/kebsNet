@@ -15,7 +15,7 @@
 # pragma once
 #endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
-//#include "asio/any_completion_executor.hpp"
+#include "asio/any_completion_executor.hpp"
 #include "asio/any_completion_handler.hpp"
 #include "asio/any_io_executor.hpp"
 #include "asio/append.hpp"
