@@ -63,7 +63,7 @@ public:
 
 	bool on_connection();
 
-	void send_message(NetMessage& message);
+	void send_message(std::string message);
 
 	void clear_message();
 

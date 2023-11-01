@@ -6,12 +6,6 @@ void usr_make_connection(EndToEnd& istance, std::string ip,  uint16_t port)
 	
 	//here i add a check for the ip address
 	
-	if (ip.length() != 13) {
-		std::cout << "error: invalid ip address" << std::endl;
-		
-	}
-	
-	else  {
 		std::thread io_thread([&istance, port, ip] {
 			istance.make_connection(ip, port);
 			});
@@ -19,16 +13,15 @@ void usr_make_connection(EndToEnd& istance, std::string ip,  uint16_t port)
 
 		std::cout << "tring to connect to:  " << ip << std::endl;
 		
-	}
+	
 }
 
 
 void usr_send_message(const std::string& message, EndToEnd& istance)
 {
-	NetMessage user_message;
-	user_message.compose_messge(message);
+	
 
-	istance.send_message(user_message);
+	istance.send_message(message);
 
 	//ok
 }
@@ -50,7 +43,7 @@ void usr_listen_connection(EndToEnd& istance, stopping_flags &flg, uint16_t port
 
 	else if (!flg.acceptor) {
 		
-		std::thread io_thread([&istance, &port] {
+		std::thread io_thread([&istance, port] {
 			istance.wait_for_connection(port);
 			});
 
@@ -106,7 +99,7 @@ void user_input()
 		{"help", Inputs::help},
 		{"make connection ", Inputs::makeConn},
 		{"listen for connection ", Inputs::listenForConn},
-		{"send message", Inputs::sendMessage},
+		{"send message ", Inputs::sendMessage},
 		{"break connection", Inputs::breakConn},
 		{"quit", Inputs::quit},
 		{"stop listening", Inputs::stopListening}
@@ -124,6 +117,7 @@ void user_input()
 
 	uint16_t val;
 	std::string ip ="";
+	std::string converted_msg = "";
 
 	while (loop) {
 
@@ -161,17 +155,16 @@ void user_input()
 			{
 			case Inputs::help:
 				std::cout << utils::helpMap();
-
 				break;
 
+				// here i handle specific input like port and ip address , for valuating those input
+				//i use custom functions
 			case Inputs::makeConn:
 				val = utils::custom_converter(tokens[2]); 
 				if (val == 0) break; 
-				
 				ip = utils::ignore_spaces(tokens[1]);
 
 				usr_make_connection( *sharedEt, ip, val);
-
 				break;
 
 			case Inputs::listenForConn:
@@ -182,9 +175,18 @@ void user_input()
 				break;
 
 			case Inputs::sendMessage:
-				usr_send_message(tokens[1], *sharedEt);
-
-				break;
+				//here i have a problem , if the user use "-" char inside the message i will encounter a error
+				//i need a way to fix this problem
+				converted_msg = utils::message_converter(tokens[1]);
+				if (converted_msg != "@#$%%575339") {
+					usr_send_message(converted_msg, *sharedEt);
+					break;
+				}
+				else {
+					std::cout << "invalid message format try again";
+					break;
+				}
+				
 
 			case Inputs::breakConn:
 				sharedEt->close_connection();

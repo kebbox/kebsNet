@@ -8,4 +8,6 @@ namespace utils
 
 	uint16_t custom_converter(std::string input);
 
+	std::string message_converter(std::string message);
+
 }

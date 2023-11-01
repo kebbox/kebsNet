@@ -10,7 +10,7 @@ std::string utils::helpMap()
 		" try the following inputs: \n"
 		" '>help' display this message\n"
 		" '>make connection <ip, port>' \n"
-		" '>send message <message>'\n"
+		" '>send message <\"message\">'\n"
 		" '>listen for connection <port>'\n"
 		" '>break connection'\n";
 		" '>quit' end this program";
@@ -46,4 +46,22 @@ std::string utils::ignore_spaces(std::string name) {
 		return name;
 	}
 }
+std::string utils::message_converter(std::string message)
+	{
+	char standard_quote = '\"';
+	
+	char first = message[0];
+	//here message.front give me the ref of the first element this could be a problem with async operations
+	//will see how it goes
+	if (message.back() == standard_quote && first == standard_quote) {
+		//message looks valid
+		message.erase(std::remove(message.begin(), message.end(), '"'), message.end());
+		return message;
+	}
 
+	else {
+		return "@#$%%575339"; // for now will return a very specific string as a non valid input, i know is bad
+	}
+	
+	
+	}
