@@ -2,6 +2,7 @@
 
 #include "net_common.h"
 #include "NetMessage.h"
+#include "utils.h"
 
 class EndToEnd
 {
@@ -53,9 +54,9 @@ public:
 	
 
 	//bunch of fundamental function for networking
-	void wait_for_connection(uint16_t port);
+	void listen_for_connection(uint16_t port);
 	
-	void stop_waiting();
+	void stop_listening();
 
 	void make_connection(const std::string ip, uint16_t port);
 

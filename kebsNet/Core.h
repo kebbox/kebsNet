@@ -18,6 +18,7 @@ void usr_break_connection(EndToEnd& istance);
 
 void usr_listen_connection(EndToEnd& istance, stopping_flags &flg, uint16_t port);
 
+void destroyEt(std::shared_ptr<EndToEnd> sharedEt);
 
 std::vector<std::string> input_tokenizer(std::string word);
 

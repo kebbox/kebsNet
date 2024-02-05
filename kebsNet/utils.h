@@ -10,4 +10,7 @@ namespace utils
 
 	std::string message_converter(std::string message);
 
+	bool is_message_complete(const std::vector<char>& messageBuffer);
+
+
 }

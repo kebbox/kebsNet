@@ -13,10 +13,22 @@ std::string utils::helpMap()
 		" '>send message <\"message\">'\n"
 		" '>listen for connection <port>'\n"
 		" '>break connection'\n";
-		" '>quit' end this program";
-		" '>stop listening' stop listen for connection";
+		" '>quit' end this program\n";
+		" '>stop listening' stop listen for connection\n";
 	return help;
 }
+
+bool utils::is_message_complete(const std::vector<char>& messageBuffer) {
+	// Check if the termination character is present in the messageBuffer
+	for (char ch : messageBuffer) {
+		if (ch == '\0') {
+			return true;  // Message is complete
+		}
+	}
+	return false;  // Termination character not found
+}
+	
+
 
 uint16_t utils::custom_converter(std::string input)
 {
@@ -32,7 +44,7 @@ uint16_t utils::custom_converter(std::string input)
 		if (numbers.find(i) == std::string::npos) {
 			std::cout << "error invalid port!" << std::endl;
 			return 0;
-		}
+		} 
 	}
 	int partial = stoi(input);
 	return static_cast<uint16_t>(partial);

@@ -44,12 +44,13 @@ void usr_listen_connection(EndToEnd& istance, stopping_flags &flg, uint16_t port
 	else if (!flg.acceptor) {
 		
 		std::thread io_thread([&istance, port] {
-			istance.wait_for_connection(port);
+			istance.listen_for_connection(port);
 			});
-
 		io_thread.detach();
-		std::cout << "started listening for connection" << std::endl;
+		std::cout << "started listening for connection on port: " << port << std::endl;
 		flg.acceptor = true;
+		
+		
 	}
 }
 
@@ -77,6 +78,14 @@ void reset_flags(stopping_flags& flg)
 {
 	flg.acceptor = false;
 	
+}
+void destroyEt(std::shared_ptr<EndToEnd> sharedEt) {
+	sharedEt->stop_context();
+	sharedEt.reset();
+	
+	sharedEt = std::make_shared<EndToEnd>();
+	//reset_flags(flg);
+
 }
 
 void user_input()
@@ -106,6 +115,7 @@ void user_input()
 
 	};
 
+
 	stopping_flags flg{ false };
 
 	//HERE I NEED TO USE A SEPARATE THREAD
@@ -113,7 +123,7 @@ void user_input()
 	std::shared_ptr<EndToEnd> sharedEt = std::make_shared<EndToEnd>();
 
 	bool loop = true;
-	bool destroyEt = false;
+
 
 	uint16_t val;
 	std::string ip ="";
@@ -121,17 +131,10 @@ void user_input()
 
 	while (loop) {
 
-		if (destroyEt) {
-			sharedEt->stop_context();
-			sharedEt.reset();
-			destroyEt = false;
-			sharedEt = std::make_shared<EndToEnd>();
-			reset_flags(flg);
-		}
-		
-
 
 		std::string usr_input = "";
+		
+		std::cin.clear();
 		std::cout << ">";
 		std::cin.clear();
 
@@ -183,25 +186,28 @@ void user_input()
 					break;
 				}
 				else {
-					std::cout << "invalid message format try again";
+					std::cout << "invalid message format try again" << std::endl;
 					break;
 				}
 				
 
 			case Inputs::breakConn:
-				sharedEt->close_connection();
+				destroyEt(sharedEt);
 
 				std::cout << "connection interrupted " << std::endl;
 				break;
 
 			case Inputs::quit:
-				destroyEt = true;
+				destroyEt(sharedEt);
+				std::cout << "exting program..." << std::endl;
 				loop = false;
 				break;
 
 			case Inputs::stopListening:
-				sharedEt->stop_waiting();
-				destroyEt = true;
+				destroyEt(sharedEt);
+				flg.acceptor = false;
+				
+				//this work because i activly destroy my object entity
 				std::cout << "stopped listening to connection " << std::endl;
 				break;
 			}

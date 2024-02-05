@@ -4,12 +4,12 @@
 
 // ok looks like i need a timer for async acceptor 
 // an expiration timer
-void EndToEnd::wait_for_connection(uint16_t port)
+void EndToEnd::listen_for_connection(uint16_t port)
 {
 	//looks like that the async asio operation are hard to kill
 	// so if the user want to close the listening for connection i must destroy the whole object
 	// 
-	std::cout << port << std::endl;
+	
 	asio::ip::tcp::endpoint acceptor_endpoint(asio::ip::tcp::v4(), port);
 	m_server_acceptor.open(acceptor_endpoint.protocol());
 	m_server_acceptor.bind(acceptor_endpoint);
@@ -23,11 +23,11 @@ void EndToEnd::wait_for_connection(uint16_t port)
 			{
 				std::cout << "connection accepted! " << std::endl;
 				
-				std::thread message_listner_thr([this] {
-					this->listen_for_message();
-					});
-				message_listner_thr.detach();
-				listen_for_message();
+				
+				this->listen_for_message();
+					
+				
+				
 			}
 		
 	
@@ -41,7 +41,7 @@ void EndToEnd::wait_for_connection(uint16_t port)
 	
 }
 
-void EndToEnd::stop_waiting()
+void EndToEnd::stop_listening()
 {
 }
 
@@ -54,6 +54,12 @@ void EndToEnd::make_connection(const std::string ip, uint16_t port)
 		{
 			if (!ec) {
 				std::cout << std::endl << "connected" << std::endl;
+				//ok this work i dont need to make the listen for message also in a separete thread
+				//thinking about it it make sense beacuse make connection is already in a separete thread
+				//the same in the function listen for connection
+				this->listen_for_message();
+					
+				
 			}
 
 			else
@@ -85,6 +91,8 @@ void EndToEnd::send_message(std::string message)
 	
 		
 		asio::error_code ec;
+		message.append("\0");
+		std::cout << message << std::endl;
 		asio::const_buffer buffer = asio::buffer(message);
 		m_socket.write_some(buffer, ec);
 
@@ -111,26 +119,39 @@ void EndToEnd::clear_message()
 
 void EndToEnd::listen_for_message()
 {
-	size_t bites = m_socket.available();
-	if (bites > 0) {
-		std::vector<char> buffer(1024);
+	std::vector<char> buffer(1024); // Initial buffer size 
+	std::vector<char> messageBuffer; // Accumulate the complete message
 
-		m_socket.async_read_some(asio::buffer(buffer.data(), buffer.size()), [buffer, this](asio::error_code ec, std::size_t message_bytes) {
-			if (!ec)
-			{
-				std::string message(buffer.begin(), buffer.begin() + message_bytes);
-				std::cout << "message : " << message << std::endl;
+	//SO I NEED TO PUT  buffer and msg buffer outside the function otherwise they will be recursivly resetted
+	//also i need to implement the function message complete ie checking for a termination charater
+	std::cout << "open for messages " << std::endl;
+	
+		m_socket.async_read_some(asio::buffer(buffer), [this, &messageBuffer, &buffer](asio::error_code ec, std::size_t bytes_transferred) {
+			
+			if (!ec) {
+				// Append the received data to the message buffer
+				;
+				// Check if the message is complete (e.g., by checking for message termination)
+				if (utils::is_message_complete(messageBuffer)) {
+					std::string message(messageBuffer.begin(), messageBuffer.end());
+					std::cout << "Received message: " << message << std::endl;
+					// Clear the message buffer for the next message
+					messageBuffer.clear();
+				}
 				listen_for_message();
+	
 			}
-			else if (ec)
-			{
-				std::cout << "Error durig message reception: " << ec.message() << std::endl;
-
+			else {
+				std::cout << "Error during message reception: " << ec.message() << std::endl;
+				// Handle the error as appropriate
 			}
-		});
-	}
+			});
+		run_context();
+	
+	
 
 }
+
 
 
 void EndToEnd::run_context() {
