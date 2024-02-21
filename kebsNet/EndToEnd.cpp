@@ -21,24 +21,67 @@ void EndToEnd::listen_for_connection(uint16_t port)
 			
 			if (!ec)
 			{
-				std::cout << "connection accepted! " << std::endl;
-				
-				
-				this->listen_for_message();
-					
-				
-				
+				std::cout << "connection accepted! " << std::endl;	
+				listen_for_message();
 			}
 		
-	
-			else if(ec)
+			else if (ec == asio::error::operation_aborted) {
+				std::cout << "Accept operation aborted: " << ec.message() << std::endl;
+				m_server_acceptor.cancel();
+			}
+
+			else if (ec == asio::error::eof) {
+				std::cout << "connection interrupted by remote pc: " << ec.message() << std::endl;
+				m_server_acceptor.cancel();
+			}
+
+		
+			else 
 			{
 				std::cout << "ERROR  during asyncAccept: " << ec.message() << std::endl;
 				
 			}	
 		});
-	run_context();
 	
+
+	
+}
+void EndToEnd::listen_for_message()
+{
+	
+	//std::vector<char> messageBuffer; // Accumulate the complete message
+
+	//SO I NEED TO PUT  buffer and msg buffer outside the function otherwise they will be recursivly resetted
+	//also i need to implement the function message complete ie checking for a termination charater
+
+
+	m_socket.async_read_some(asio::buffer(buffer), [this ](asio::error_code ec, std::size_t bytes_transferred) {
+
+		if (!ec) {
+			// Append the received data to the message buffer
+			
+
+
+
+
+			std::string message(buffer.begin(), buffer.begin() + bytes_transferred);
+			std::cout << "Received message: " << message << std::endl;
+		
+
+			listen_for_message();
+
+		}
+		else if (ec == asio::error::eof) {
+			std::cout << "connection interrupted by remote pc: " << ec.message() << std::endl;
+			m_server_acceptor.cancel();
+		}
+		else if (ec != asio::error::not_connected) {
+			std::cout << "Error during message reception: " << ec.message() << std::endl;
+			// Handle the error as appropriate
+		}
+		});
+	
+
 }
 
 void EndToEnd::stop_listening()
@@ -58,8 +101,7 @@ void EndToEnd::make_connection(const std::string ip, uint16_t port)
 				//thinking about it it make sense beacuse make connection is already in a separete thread
 				//the same in the function listen for connection
 				this->listen_for_message();
-					
-				
+
 			}
 
 			else
@@ -91,17 +133,17 @@ void EndToEnd::send_message(std::string message)
 	
 		
 		asio::error_code ec;
-		message.append("\0");
+		
 		std::cout << message << std::endl;
 		asio::const_buffer buffer = asio::buffer(message);
-		m_socket.write_some(buffer, ec);
+		asio::write( m_socket, buffer, ec);
 
 		if (!ec)
 		{
 			std::cout << "message delivered" << std::endl;
 
 		}
-		else if (ec) {
+		else {
 			std::cout << "error sending message " << ec.message() << std::endl;
 
 		}
@@ -117,40 +159,6 @@ void EndToEnd::clear_message()
 }
 
 
-void EndToEnd::listen_for_message()
-{
-	std::vector<char> buffer(1024); // Initial buffer size 
-	std::vector<char> messageBuffer; // Accumulate the complete message
-
-	//SO I NEED TO PUT  buffer and msg buffer outside the function otherwise they will be recursivly resetted
-	//also i need to implement the function message complete ie checking for a termination charater
-	std::cout << "open for messages " << std::endl;
-	
-		m_socket.async_read_some(asio::buffer(buffer), [this, &messageBuffer, &buffer](asio::error_code ec, std::size_t bytes_transferred) {
-			
-			if (!ec) {
-				// Append the received data to the message buffer
-				;
-				// Check if the message is complete (e.g., by checking for message termination)
-				if (utils::is_message_complete(messageBuffer)) {
-					std::string message(messageBuffer.begin(), messageBuffer.end());
-					std::cout << "Received message: " << message << std::endl;
-					// Clear the message buffer for the next message
-					messageBuffer.clear();
-				}
-				listen_for_message();
-	
-			}
-			else {
-				std::cout << "Error during message reception: " << ec.message() << std::endl;
-				// Handle the error as appropriate
-			}
-			});
-		run_context();
-	
-	
-
-}
 
 
 

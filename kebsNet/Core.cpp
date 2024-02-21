@@ -44,13 +44,12 @@ void usr_listen_connection(EndToEnd& istance, stopping_flags &flg, uint16_t port
 	else if (!flg.acceptor) {
 		
 		std::thread io_thread([&istance, port] {
-			istance.listen_for_connection(port);
+			istance.listen_for_connection(port); 
+			istance.run_context();
 			});
 		io_thread.detach();
 		std::cout << "started listening for connection on port: " << port << std::endl;
-		flg.acceptor = true;
-		
-		
+		flg.acceptor = true;	
 	}
 }
 
@@ -174,6 +173,7 @@ void user_input()
 				val = utils::custom_converter(tokens[1]); 
 				if (val == 0) break;
 				usr_listen_connection(*sharedEt, flg, val);
+				
 
 				break;
 

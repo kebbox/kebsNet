@@ -6,8 +6,10 @@
 
 class EndToEnd
 {
+public:
+	
 private:
-
+	std::vector<char> buffer;
 	
 	asio::error_code m_client_ec;
 	asio::io_context m_client_context;
@@ -47,6 +49,7 @@ public:
 
 	EndToEnd(uint16_t port = 200)
 		: m_server_acceptor(m_client_context),
+		buffer(1024) ,
 		m_endpoint(asio::ip::tcp::v4(), port),
 		m_message{ nullptr },
 		m_socket(m_client_context),
@@ -72,7 +75,7 @@ public:
 
 	void run_context();
 
-	void EndToEnd::stop_context();
+	void stop_context();
 
 
 	//this function "set flag" change the flag if i want to interrupt an 
